@@ -3,7 +3,7 @@ name: Build and Push Demo_CI_CD_Cellphones
 on:
   push:
     branches: [ master ]
-  workflow_dispatch:  # Cho phép chạy thủ công
+  workflow_dispatch: {}  # Sửa lỗi YAML
 
 jobs:
   docker:
@@ -31,6 +31,7 @@ jobs:
             ${{ runner.os }}-buildx-
 
       - name: Build and Push Client Image
+        id: build_client
         uses: docker/build-push-action@v5
         with:
           context: ./doan/client
@@ -42,6 +43,7 @@ jobs:
           cache-to: type=local,dest=/tmp/.buildx-cache
 
       - name: Build and Push Server Image
+        id: build_server
         uses: docker/build-push-action@v5
         with:
           context: ./doan/server
@@ -53,4 +55,6 @@ jobs:
           cache-to: type=local,dest=/tmp/.buildx-cache
 
       - name: Verify build digest
-        run: echo "Client Image Digest: ${{ steps.docker_build.outputs.digest }}"
+        run: |
+          echo "Client Image Digest: ${{ steps.build_client.outputs.digest }}"
+          echo "Server Image Digest: ${{ steps.build_server.outputs.digest }}"
