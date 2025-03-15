@@ -1,20 +1,29 @@
-# Sử dụng Node.js phiên bản phù hợp
-FROM node:20
+
+FROM node:20 AS builder
 
 # Đặt thư mục làm việc
 WORKDIR /app
 
-# Sao chép file package.json và package-lock.json
+# Sao chép file package.json và package-lock.json trước để cache dependencies
 COPY package*.json ./
 
 # Cài đặt dependencies
-RUN npm install
+RUN npm ci --only=production
 
 # Sao chép toàn bộ source code
 COPY . .
 
+# Build ứng dụng
+RUN npm run build
 
-EXPOSE 4000
+# Sử dụng Nginx chạy frontend
+FROM nginx:alpine
 
-# Chạy ứng dụng
-CMD ["npm", "start"]
+# Copy file build sang Nginx
+COPY --from=builder /app/build /usr/share/nginx/html
+
+# Mở cổng 80
+EXPOSE 80
+
+# Chạy Nginx
+CMD ["nginx", "-g", "daemon off;"]
